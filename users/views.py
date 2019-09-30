@@ -40,7 +40,7 @@ class SignUp(View):
         akey.save()
         auth_ref = 'http://'+str(get_current_site(request))+'/users/activate/'+akey.key
 
-        email = send_mail('Hello!!!', 'Please, confirm your registration:\n'+auth_ref, 'legimonas1000@gmail.com', [user.email], fail_silently=True)
+        email = send_mail('Hello!!!', 'Please, confirm your registration:\n'+auth_ref, 'from@mail.ru', [user.email], fail_silently=True)
 
         return render(request, 'users/Message.html', context={'message': 'На ваш почтовый адрес было отправлено письмо с подтверждением аккаунта!!!'})
         #return render(request, 'users/edit_profile.html', context={'errors': errors, 'form': form})
