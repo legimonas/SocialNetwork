@@ -140,6 +140,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 
 # Optional SMTP authentication information for EMAIL_HOST.
-EMAIL_HOST_USER = 'legimonas1000@gmail.com'
-EMAIL_HOST_PASSWORD = '12Ad23Sf34Dg'
+EMAIL_HOST_USER = 'from@mail.ru'
+EMAIL_HOST_PASSWORD = 'password'
 EMAIL_USE_TLS = True
