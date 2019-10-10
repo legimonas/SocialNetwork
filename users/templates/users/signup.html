@@ -1,42 +1,8 @@
 {% extends 'wrapper.html' %}
 {% block includes %}
-    <script type="text/javascript">
-        function checkPass()
-        {
-            var pass1 = document.getElementById('password');
-            var pass2 = document.getElementById('pass2');
-            var message = document.getElementById('error-nwl');
-            var goodColor = "#FFFFFF";
-            var badColor = "#F46670";
+    {% load staticfiles %}
+    <script type="text/javascript" src={% static "js/password_validation.js" %}></script>
 
-            if(pass1.value.length > 5)
-            {
-                pass1.style.backgroundColor = goodColor;
-                message.style.color = goodColor;
-                message.innerHTML = "";
-            }
-            else
-            {
-                pass1.style.backgroundColor = badColor;
-                message.style.color = badColor;
-                message.innerHTML = " you have to enter at least 6 digit!"
-                return;
-            }
-
-            if(pass1.value == pass2.value)
-            {
-                pass2.style.backgroundColor = goodColor;
-                message.style.color = goodColor;
-                message.innerHTML = "";
-            }
-            else
-            {
-                pass2.style.backgroundColor = badColor;
-                message.style.color = badColor;
-                message.innerHTML = " These passwords don't match"
-            }
-}
-    </script>
 {% endblock %}
 {% block title %}
     Регистрация
@@ -78,7 +44,7 @@
             <div class="form-group">
                 <label for="password">Password<br>
                     <input type="password" id="password" name="password" placeholder="Password" value="{{ form.password }}" class="form-control" onkeyup="checkPass(); return false;" />
-                    <input name="repeatpassword" type="password" placeholder="confirm Password" id="pass2" class="form-control" onkeyup="checkPass(); return false;" />
+                    <input style="margin-top: 2px" name="repeatpassword" type="password" placeholder="confirm Password" id="pass2" class="form-control" onkeyup="checkPass(); return false;" />
                     <div id="error-nwl" style="font-size: 14px; color: red"></div>
                 </label>
             </div>
