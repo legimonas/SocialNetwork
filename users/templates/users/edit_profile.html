@@ -11,23 +11,23 @@
             {% csrf_token %}
             {{ form.mail }}
             <div class="form-group">
-                <label for="first_name">Mail
+                <label for="first_name">First Name
                     <input type="text" id="first_name" name="first_name" placeholder="FirstName" value="{{ profile_form.first_name }}" class="form-control">
                 </label>
             </div>
             <div class="form-group">
-                <label for="last_name">Mail
+                <label for="last_name">Last Name
                     <input type="text" id="last_name" name="last_name" placeholder="LastName" value="{{ profile_form.last_name }}" class="form-control">
                 </label>
             </div>
             <div class="form-group">
-                <label for="birth_date">BirthDate
+                <label for="birth_date">Birth Date
                     <input type="date" id="birth_date" name="birth_date" value="{{ profile_form.birth_date }}" class="form-control">
                 </label>
             </div>
             <div class="form-group">
                 <label for="interests">Interests
-                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" cols="100"></textarea>
+                    <textarea class="form-control" id="interests" name="interests" rows="3" cols="100">{{ profile_form.interests }}</textarea>
                 </label>
             </div>
             <div class="form-group">

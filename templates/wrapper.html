@@ -39,10 +39,9 @@
             </a>
 
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <p class="dropdown-item">
-                      {{ request.user.username }}<br>
-                      {{ request.user.email }}
-                  </p>
+                  <a class="dropdown-item" href="{% url 'users_app:edit_profile' %}">
+                      {{ request.user.username }}
+                  </a>
                     <div class="dropdown-divider"></div>
                   <a class="dropdown-item" href="#">Profile</a>
 
