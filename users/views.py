@@ -36,7 +36,6 @@ class SignUp(View):
             return render(request, 'users/Message.html',
                           context={'message': 'На ваш почтовый адрес было отправлено письмо с подтверждением аккаунта!!!'})
         else:
-            print(form.errors.as_data())
             f = {}
             for key in request.POST:
                 f[key] = request.POST.get(key)
