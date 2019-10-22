@@ -60,7 +60,6 @@ class Login(View):
             form = form_from_request.cleaned_data
         else:
             return render(request, 'users/login,html', context={'login_error': form_from_request.errors})
-        print(form)
         user = authenticate(email=form['email'],
                             password=form['password'])
 
@@ -80,7 +79,6 @@ class Logout(View):
 class Activate(View):
     def get(self, request, key):
         auth_key = AuthKey.safe_get(key=key)
-        print(auth_key.key)
         if auth_key is not None:
             user = auth_key.user
             print(user)
