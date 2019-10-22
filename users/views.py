@@ -41,7 +41,6 @@ class SignUp(View):
             for key in request.POST:
                 f[key] = request.POST.get(key)
             f.pop('csrfmiddlewaretoken')
-            print(f)
 
             return render(request, 'users/signup.html', context={'errors': form.errors.as_data(), 'form': f})
 
