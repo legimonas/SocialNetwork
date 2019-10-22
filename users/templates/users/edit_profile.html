@@ -7,9 +7,14 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-        <form action="{% url 'users_app:edit_profile' %}" method="post" >
+        <form action="{% url 'users_app:edit_profile' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.mail }}
+            {% if forma %}
+                {{ forma.as_p }}
+
+            {% else %}
+            <label for="id_avatar">Avatar:</label>
+            <input type="file" name="avatar" accept="image/*" id="id_avatar">
             <div class="form-group">
                 <label for="first_name">First Name
                     <input type="text" id="first_name" name="first_name" placeholder="FirstName" value="{{ profile_form.first_name }}" class="form-control">
@@ -30,10 +35,12 @@
                     <textarea class="form-control" id="interests" name="interests" rows="3" cols="100">{{ profile_form.interests }}</textarea>
                 </label>
             </div>
+            {% endif %}
+            <div id="message" style="font-size: 14px; color: red">{{ message }}</div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-success btn-lg">
             </div>
-            <a href="{% url 'home_app:home' %}" class="btn btn-link" style="padding-left: 0%">Главная страница</a><br>
+            <a href="{% url 'home_app:home' %}" class="btn btn-link" style="padding-left: 0%">Home Page</a><br>
         </form>
     </div>
 {% endblock %}

@@ -5,7 +5,9 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'SocialNetwork.settings')
+
+    os.environ.__setitem__('DJANGO_SETTINGS_MODULE', 'settings.development')
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

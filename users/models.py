@@ -2,7 +2,12 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import MyUserManager
 from django.utils import timezone
+from django.core.files.storage import default_storage
+from django.conf import settings
 import random, string
+from PIL import Image
+from io import StringIO
+import os
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -20,24 +25,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(models.Model):
+    avatar = models.ImageField(upload_to='users_avatars', null=True)
     first_name = models.CharField(max_length=50, null=True)
     last_name = models.CharField(max_length=50, null=True)
     birth_date = models.DateTimeField(default=timezone.datetime(year=2000, month=1, day=1))
     interests = models.TextField(default="")
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
-
-    @staticmethod
-    def get_profile_from_form(**kwargs):
-        return UserProfile(first_name=kwargs.get('first_name'),
-                           last_name=kwargs.get('last_name'),
-                           birth_date=kwargs.get('birth_date'),
-                           interests=kwargs.get('interests'))
-
-    def set_profile_from_form(self, **kwargs):
-        self.first_name = kwargs.get('first_name')
-        self.last_name = kwargs.get('last_name')
-        self.birth_date = kwargs.get('birth_date')
-        self.interests = kwargs.get('interests')
 
 
 class AuthKey(models.Model):
@@ -46,8 +39,8 @@ class AuthKey(models.Model):
 
     def safe_get(key=None):
         try:
-            akey = AuthKey.objects.get(key=key)
-            return akey
+            a_key = AuthKey.objects.get(key=key)
+            return a_key
         except AuthKey.DoesNotExist:
             return None
 

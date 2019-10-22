@@ -1,0 +1,18 @@
+{% extends 'wrapper.html' %}
+{% block title %}
+    Вход
+{% endblock %}
+{% block signup_active %}
+    active
+{% endblock %}
+{% block content %}
+    <div class="container" style="border-color: #007bff">
+        {% load staticfiles %}
+        <p><img src="/media/users_avatars/{{ profile_form.avatar }}" alt="image"></p>
+        <p>FirstName: {{ profile_form.first_name }}</p>
+        <p>LastName: {{ profile_form.last_name }}</p>
+        <p>BirthDate: {{ profile_form.birth_date }}</p>
+        <p>Interests: {{ profile_form.interests }}</p>
+        <a href="{% url 'users_app:edit_profile' %}" class="btn btn-success btn-lg" style="padding-left: 0%">Edit</a><br>
+    </div>
+{% endblock %}

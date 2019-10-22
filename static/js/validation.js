@@ -32,3 +32,24 @@ function checkPass() {
         message.innerHTML = "These passwords don't match"
     }
 }
+function checkMail() {
+    var mail = document.getElementById("email");
+    var message = document.getElementById("error-m")
+    var goodColor = "#FFFFFF";
+    var badColor = "#F46670";
+
+
+    if(mail.value().indexOf("@")+1){
+        mail.style.borderColor = badColor;
+        mail.style.borderWidth = "1.5px";
+        message.style.color = badColor;
+        message.innerHTML = "These passwords don't match"
+    } else {
+        mail.style.borderColor = goodColor;
+        mail.style.borderWidth = "0px";
+        message.style.color = goodColor;
+        message.innerHTML = "bla";
+    }
+
+
+}
