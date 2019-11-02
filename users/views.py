@@ -1,12 +1,11 @@
-from django.shortcuts import render, redirect
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import EmailMessage, send_mail
+from django.shortcuts import render, redirect, render_to_response
+from django.core.mail import send_mail
 from django.views import View
+from django.urls import reverse
 from .forms import *
 from users.models import *
 from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
-from django.core.files.storage import default_storage
 import os
 
 
@@ -18,15 +17,11 @@ class SignUp(View):
         form = UserForm(request.POST)
 
         if form.is_valid():
-            user = User.objects.create_user(email=form.cleaned_data['email'],
-                                            password=form.cleaned_data['password'],
-                                            username=form.cleaned_data['username'],
-                                            is_active=False)
+            user = User.objects.create_user(form)
 
             auth_key = AuthKey(key=AuthKey.gen_key(10), user=user)
             auth_key.save()
-            auth_ref = request.build_absolute_uri() + 'activate/' + auth_key.key
-
+            auth_ref = request.build_absolute_uri(reverse('users_app:activate', args=[auth_key.key]))
             email = send_mail('Hello!!!',
                               'Please, confirm your registration:\n' + auth_ref,
                               'progr.0820@mail.ru',
@@ -34,7 +29,8 @@ class SignUp(View):
                               fail_silently=True)
 
             return render(request, 'users/Message.html',
-                          context={'message': 'На ваш почтовый адрес было отправлено письмо с подтверждением аккаунта!!!'})
+                          context={
+                              'message': 'На ваш почтовый адрес было отправлено письмо с подтверждением аккаунта!!!'})
         else:
             f = {}
             for key in request.POST:
@@ -42,7 +38,6 @@ class SignUp(View):
             f.pop('csrfmiddlewaretoken')
 
             return render(request, 'users/signup.html', context={'errors': form.errors.as_data(), 'form': f})
-
 
         # return render(request, 'users/edit_profile.html', context={'errors': errors, 'form': form})
 
@@ -59,7 +54,7 @@ class Login(View):
         if form_from_request.is_valid():
             form = form_from_request.cleaned_data
         else:
-            return render(request, 'users/login,html', context={'login_error': form_from_request.errors})
+            return render(request, 'users/login.html', context={'login_error': form_from_request.errors})
         user = authenticate(email=form['email'],
                             password=form['password'])
 
@@ -89,31 +84,31 @@ class Activate(View):
 
 
 class ProfileView(View):
-    view_name = 'users/profile.html'
-
-    def get(self, request):
-        if not request.user.is_authenticated:
-            return redirect('users_app:login')
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
         else:
-            profile = UserProfile.objects.get(user=request.user)
-            profile_form = {
-                'avatar': profile.avatar,
-                'first_name': profile.first_name,
-                'last_name': profile.last_name,
-                'birth_date': profile.birth_date,
-                'interests': profile.interests
-            }
-
-            for key in profile_form:
-                if not profile_form[key]:
-                    profile_form[key] = ""
-            return render(request, self.view_name, context={'profile_form': profile_form})
+            profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
+            if profile_form:
+                return render(request, 'users/profile.html', context={'profile_form': profile_form})
+            else:
+                return render(request, 'home_app/homepage.html')
 
 
-class EditProfileView(ProfileView):
-    view_name = 'users/edit_profile.html'
+class EditProfileView(View):
 
-    def post(self, request):
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
+        else:
+            profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
+            print(profile_form.first_name)
+            if profile_form:
+                return render(request, 'users/edit_profile.html', context={'profile_form': profile_form})
+            else:
+                return render(request, 'home_app/homepage.html')
+
+    def post(self, request, user_id=None):
         form = UserProfileForm(request.POST, request.FILES, instance=UserProfile.objects.get(user=request.user))
         if form.is_valid():
             old_avatar_path = settings.MEDIA_ROOT + '\\' + str(UserProfile.objects.get(user=request.user).avatar.name)
@@ -122,16 +117,10 @@ class EditProfileView(ProfileView):
             except:
                 print('can not delete old image')
             if 'avatar' in request.FILES:
-                form.avatar = request.FILES['avatar']
-                filename = request.FILES['avatar'].name
-
-
+                form.save(filename=request.FILES['avatar'].name)
+            else:
                 form.save()
-                image = Image.open(settings.MEDIA_ROOT + "\\users_avatars\\" + form.avatar.name)
-                image.thumbnail((200, 200))
-                os.remove(settings.MEDIA_ROOT + "\\users_avatars\\" + form.avatar.name)
-                image.save(settings.MEDIA_ROOT + "\\users_avatars\\" + form.avatar.name)
 
-            return render(request, 'users/profile.html', context={'profile_form': form.cleaned_data})
+            return redirect('users_app:profile', user_id)
         else:
             return render(request, 'users/edit_profile.html', context={'message': form.errors})

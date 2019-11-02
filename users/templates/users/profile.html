@@ -8,11 +8,13 @@
 {% block content %}
     <div class="container" style="border-color: #007bff">
         {% load staticfiles %}
-        <p><img src="/media/users_avatars/{{ profile_form.avatar }}" alt="image"></p>
-        <p>FirstName: {{ profile_form.first_name }}</p>
-        <p>LastName: {{ profile_form.last_name }}</p>
-        <p>BirthDate: {{ profile_form.birth_date }}</p>
-        <p>Interests: {{ profile_form.interests }}</p>
-        <a href="{% url 'users_app:edit_profile' %}" class="btn btn-success btn-lg" style="padding-left: 0%">Edit</a><br>
+        <p><img src="/media/{{ profile_form.avatar }}" alt="image"></p>
+        <p>FirstName: {% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}</p>
+        <p>LastName: {% if profile_form.last_name %}{{ profile_form.last_name }}{% endif %}</p>
+        <p>BirthDate: {% if profile_form.birth_date %}{{ profile_form.birth_date }}{% endif %}</p>
+        <p>Interests: {% if profile_form.interests %}{{ profile_form.interests }}{% endif %}</p>
+        {% if request.user.id == profile_form.user_id %}
+        <a href="{% url 'users_app:edit_profile' request.user.id %}" class="btn btn-success btn-lg" style="padding-left: 0%">Edit</a><br>
+        {% endif %}
     </div>
 {% endblock %}

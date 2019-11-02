@@ -7,6 +7,7 @@ from django.conf import settings
 import random, string
 from PIL import Image
 from io import StringIO
+
 import os
 
 
@@ -14,7 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField('email address', unique=True)
     username = models.CharField(max_length=50)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -25,7 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(models.Model):
-    avatar = models.ImageField(upload_to='users_avatars', null=True)
+    avatar = models.ImageField(upload_to='users_avatars', default='default.jpg')
     first_name = models.CharField(max_length=50, null=True)
     last_name = models.CharField(max_length=50, null=True)
     birth_date = models.DateTimeField(default=timezone.datetime(year=2000, month=1, day=1))
