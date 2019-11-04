@@ -71,7 +71,7 @@ class UserProfileForm(forms.ModelForm):
             image = Image.open(os.path.join(settings.MEDIA_ROOT, profile.avatar.name))
 
         image.thumbnail((200, 200))
-        image.save(settings.MEDIA_ROOT + '\\' + profile.avatar.name)
+        image.save(os.path.join(settings.MEDIA_ROOT, profile.avatar.name))
 
     class Meta:
         model = UserProfile
