@@ -55,6 +55,7 @@ class Login(View):
             form = form_from_request.cleaned_data
         else:
             return render(request, 'users/login.html', context={'login_error': form_from_request.errors})
+
         user = authenticate(email=form['email'],
                             password=form['password'])
 
@@ -89,10 +90,19 @@ class ProfileView(View):
             return redirect('home_app:home')
         else:
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
-            if profile_form:
+            if request.user.id == user_id or not profile_form.is_private or request.user in profile_form.available_to.all():
                 return render(request, 'users/profile.html', context={'profile_form': profile_form})
             else:
-                return render(request, 'home_app/homepage.html')
+                buttons = []
+                if request.user.is_authenticated:
+                    buttons.append({
+                        'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
+                        'name': 'Попросить разрешения'
+                    })
+                return render(request, 'users/Message.html', context={
+                    'message': 'У вас нет доступа к этому профилю',
+                    'buttons': buttons
+                })
 
 
 class EditProfileView(View):
@@ -102,7 +112,6 @@ class EditProfileView(View):
             return redirect('home_app:home')
         else:
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
-            print(profile_form.first_name)
             if profile_form:
                 return render(request, 'users/edit_profile.html', context={'profile_form': profile_form})
             else:
@@ -111,7 +120,7 @@ class EditProfileView(View):
     def post(self, request, user_id=None):
         form = UserProfileForm(request.POST, request.FILES, instance=UserProfile.objects.get(user=request.user))
         if form.is_valid():
-            old_avatar_path = settings.MEDIA_ROOT + '\\' + str(UserProfile.objects.get(user=request.user).avatar.name)
+            old_avatar_path = os.path.join(settings.MEDIA_ROOT , str(UserProfile.objects.get(user=request.user).avatar.name))
             try:
                 os.remove(old_avatar_path)
             except:
@@ -124,3 +133,50 @@ class EditProfileView(View):
             return redirect('users_app:profile', user_id)
         else:
             return render(request, 'users/edit_profile.html', context={'message': form.errors})
+
+
+class NotificationsView(View):
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
+        else:
+            notifications = Notification.objects.filter(receiver=User.objects.get(id=user_id))
+
+            return render(request, 'users/Notifications.html', context={'notifications': notifications})
+
+
+class PermissionRequest(View):
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
+        else:
+            user = User.objects.get(id=user_id)
+            print(user.notifications)
+            notification = Notification(sender=request.user,
+                                        receiver=User.objects.get(id=user_id),
+                                        text='please, give me an access to your profile')
+            notification.save()
+            user.notifications.add(notification)
+            return render(request, 'users/Message.html', context={'message': 'Ваше сообщение с просьбой открытия профиля успешно отправлено'})
+
+
+class PermissionAccept(View):
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
+        else:
+            user = User.objects.get(id=request.user.id)
+            sender = User.objects.get(id=user_id)
+            user.available_profiles.add(sender)
+            user.save()
+            Notification.objects.filter(sender=sender, is_request=True).delete()
+            return redirect('users_app:notifications', request.user.id)
+
+
+class PermissionDisable(View):
+    def get(self, request, user_id=None):
+        if not user_id:
+            return redirect('home_app:home')
+        else:
+            Notification.objects.filter(sender=User.objects.get(id=user_id), is_request=True).delete()
+            return redirect('users_app:notifications', request.user.id)

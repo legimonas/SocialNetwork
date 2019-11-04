@@ -32,6 +32,8 @@ class UserProfile(models.Model):
     birth_date = models.DateTimeField(default=timezone.datetime(year=2000, month=1, day=1))
     interests = models.TextField(default="")
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    is_private = models.BooleanField(default=False)
+    available_to = models.ManyToManyField(User, related_name='available_profiles')
 
 
 class AuthKey(models.Model):
@@ -48,3 +50,11 @@ class AuthKey(models.Model):
     @staticmethod
     def gen_key(n):
         return ''.join(random.choice(string.ascii_lowercase + string.digits) for i in range(n))
+
+
+class Notification(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications', null=True)
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', null=True)
+    text = models.TextField(default='')
+    receiving_time = models.DateTimeField(default=timezone.datetime.now())
+    is_request = models.BooleanField(default=True)

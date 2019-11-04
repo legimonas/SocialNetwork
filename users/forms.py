@@ -58,7 +58,7 @@ class UserProfileForm(forms.ModelForm):
         default = False
         if not filename:
             default = True
-            filename = '\\users_avatars\\default.jpg'
+            filename = os.path.join('users_avatars', 'default.jpg')
         name, extension = os.path.splitext(filename)
         profile = super(UserProfileForm, self).save(commit=False)
 
@@ -66,9 +66,9 @@ class UserProfileForm(forms.ModelForm):
         profile.save()
         image = None
         if default:
-            image = Image.open(settings.MEDIA_ROOT + '\\users_avatars\\default.jpg')
+            image = Image.open(os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.jpg'))
         else:
-            image = Image.open(settings.MEDIA_ROOT + '\\' + profile.avatar.name)
+            image = Image.open(os.path.join(settings.MEDIA_ROOT, profile.avatar.name))
 
         image.thumbnail((200, 200))
         image.save(settings.MEDIA_ROOT + '\\' + profile.avatar.name)
@@ -80,5 +80,7 @@ class UserProfileForm(forms.ModelForm):
             'first_name',
             'last_name',
             'birth_date',
-            'interests'
+            'interests',
+            'is_private',
+            'available_to'
         ]

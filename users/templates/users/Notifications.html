@@ -1,0 +1,25 @@
+{% extends 'wrapper.html' %}
+{% block title %}
+    Notifications
+{% endblock %}
+{% block signup_active %}
+    active
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="list-group">
+        <ol>
+            {% for notification in notifications %}
+                <li class="list-group-item">
+                    <a href="{% url 'users_app:profile' notification.sender.id %}" class="btn-link">{{notification.sender}}</a>
+                    <p class="list-group-item-text">{{ notification.text }}</p>
+                    <h6>{{ notification.receiving_time }}</h6>
+                    {% if notification.is_request %}
+
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+        </div>
+    </div>
+{% endblock %}

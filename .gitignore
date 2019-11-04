@@ -4,3 +4,4 @@ __pycache__
 *.рус
 local_settings.py
 *.jpg
+*.png

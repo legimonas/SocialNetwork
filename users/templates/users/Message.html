@@ -8,5 +8,8 @@
 {% block content %}
     <div class="container">
         <p style="margin-top: 20%">{{ message }}</p>
+            {% for button in buttons %}
+                <a href="{{ button.url }}" class="btn-block">{{ button.name }}</a>
+            {% endfor %}
     </div>
 {% endblock %}
