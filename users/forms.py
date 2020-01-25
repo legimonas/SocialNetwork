@@ -59,10 +59,17 @@ class UserProfileForm(forms.ModelForm):
         if not filename:
             default = True
             filename = os.path.join('users_avatars', 'default.jpg')
+
         name, extension = os.path.splitext(filename)
+
         profile = super(UserProfileForm, self).save(commit=False)
 
+        if self.cleaned_data['avatar'] and default:
+            profile.save()
+            return
+
         profile.avatar.name = name + '__' + str(profile.id) + extension
+
         profile.save()
         image = None
         if default:

@@ -15,5 +15,7 @@ urlpatterns = [
     path('signup/activate/<str:key>/', Activate.as_view(), name='activate'),
     path('notifications/<int:user_id>/', NotificationsView.as_view(), name='notifications'),
     path('notifications/', NotificationsView.as_view(), name='notifications'),
-    path('permission_request/<int:user_id>', PermissionRequest.as_view(), name='perm_req')
+    path('delete_not/<int:notification_id>', DeleteNotification.as_view(), name='delete_notification'),
+    path('permission_request/<int:user_id>', PermissionRequest.as_view(), name='perm_req'),
+    path('permission_accept/<int:user_id>', PermissionAccept.as_view(), name='perm_acc')
 ]

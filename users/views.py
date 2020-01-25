@@ -90,7 +90,9 @@ class ProfileView(View):
             return redirect('home_app:home')
         else:
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
-            if request.user.id == user_id or not profile_form.is_private or request.user in profile_form.available_to.all():
+            if request.user.id == user_id \
+                    or not profile_form.is_private \
+                    or profile_form in request.user.available_profiles.all():
                 return render(request, 'users/profile.html', context={'profile_form': profile_form})
             else:
                 buttons = []
@@ -120,12 +122,15 @@ class EditProfileView(View):
     def post(self, request, user_id=None):
         form = UserProfileForm(request.POST, request.FILES, instance=UserProfile.objects.get(user=request.user))
         if form.is_valid():
-            old_avatar_path = os.path.join(settings.MEDIA_ROOT , str(UserProfile.objects.get(user=request.user).avatar.name))
-            try:
-                os.remove(old_avatar_path)
-            except:
-                print('can not delete old image')
+            old_avatar_path = os.path.join(settings.MEDIA_ROOT,
+                                           str(UserProfile.objects.get(user=request.user).avatar.name))
+
             if 'avatar' in request.FILES:
+                print('t')
+                try:
+                    os.remove(old_avatar_path)
+                except:
+                    print('can not delete old image')
                 form.save(filename=request.FILES['avatar'].name)
             else:
                 form.save()
@@ -145,6 +150,14 @@ class NotificationsView(View):
             return render(request, 'users/Notifications.html', context={'notifications': notifications})
 
 
+class DeleteNotification(View):
+    def get(self, request, notification_id=None):
+        if notification_id:
+            Notification.objects.filter(id=notification_id).delete()
+
+        return redirect('users_app:notifications', request.user.id)
+
+
 class PermissionRequest(View):
     def get(self, request, user_id=None):
         if not user_id:
@@ -157,7 +170,8 @@ class PermissionRequest(View):
                                         text='please, give me an access to your profile')
             notification.save()
             user.notifications.add(notification)
-            return render(request, 'users/Message.html', context={'message': 'Ваше сообщение с просьбой открытия профиля успешно отправлено'})
+            return render(request, 'users/Message.html',
+                          context={'message': 'Ваше сообщение с просьбой открытия профиля успешно отправлено'})
 
 
 class PermissionAccept(View):
@@ -167,7 +181,11 @@ class PermissionAccept(View):
         else:
             user = User.objects.get(id=request.user.id)
             sender = User.objects.get(id=user_id)
-            user.available_profiles.add(sender)
+
+            print(user.email)
+            print(sender.email)
+
+            sender.available_profiles.add(UserProfile.objects.get(user=user))
             user.save()
             Notification.objects.filter(sender=sender, is_request=True).delete()
             return redirect('users_app:notifications', request.user.id)
