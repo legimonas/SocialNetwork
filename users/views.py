@@ -150,7 +150,7 @@ class NotificationsView(View):
             return render(request, 'users/Notifications.html', context={'notifications': notifications})
 
 
-class PermissionDisable(View):
+class DeleteNotification(View):
     def get(self, request, notification_id=None):
         if notification_id:
             Notification.objects.filter(id=notification_id).delete()
