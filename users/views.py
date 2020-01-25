@@ -150,7 +150,7 @@ class NotificationsView(View):
             return render(request, 'users/Notifications.html', context={'notifications': notifications})
 
 
-class DeleteNotification(View):
+class PermissionDisable(View):
     def get(self, request, notification_id=None):
         if notification_id:
             Notification.objects.filter(id=notification_id).delete()
@@ -191,10 +191,4 @@ class PermissionAccept(View):
             return redirect('users_app:notifications', request.user.id)
 
 
-class PermissionDisable(View):
-    def get(self, request, user_id=None):
-        if not user_id:
-            return redirect('home_app:home')
-        else:
-            Notification.objects.filter(sender=User.objects.get(id=user_id), is_request=True).delete()
-            return redirect('users_app:notifications', request.user.id)
+
