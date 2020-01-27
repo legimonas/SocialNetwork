@@ -37,9 +37,9 @@
                 <br><br>
                 <div class="form-group">
                 <label for="first_name">First Name
-                    <input type="text" id="first_name" name="first_name" placeholder="FirstName" value="{% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}" class="form-control">
+                    <input contenteditable="true" type="text" id="first_name" name="first_name" placeholder="FirstName" value="{% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}" class="form-control">
                 </label>
-            </div>
+                </div>
             <div class="form-group">
                 <label for="last_name">Last Name
                     <input type="text" id="last_name" name="last_name" placeholder="LastName" value="{% if profile_form.last_name %}{{ profile_form.last_name }}{% endif %}" class="form-control">
@@ -47,7 +47,7 @@
             </div>
             <div class="form-group">
                 <label for="birth_date">Birth Date
-                    <input type="date" id="birth_date" name="birth_date" value={{ profile_form.birth_date }} class="form-control">
+                    <input type="date" id="birth_date" name="birth_date" value="{{ birth_date }}" class="form-control">
                 </label>
             </div>
             <div class="form-group">
@@ -56,12 +56,15 @@
                     </textarea>
                 </label>
             </div>
-            {% endif %}
             <div class="form-group">
                 <label for="is_private">
-                    Private profile: <input type="checkbox" id="is_private" name="is_private"/>
+                        Is private:
+                     <input type="checkbox" id="is_private" name="is_private" {% if profile_form.is_private %}checked{% endif %}/>
+
                 </label>
             </div>
+            {% endif %}
+
             <div id="message" style="font-size: 14px; color: red">{{ message }}</div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-success btn-lg">

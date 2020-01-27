@@ -2,11 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import MyUserManager
 from django.utils import timezone
-from django.core.files.storage import default_storage
-from django.conf import settings
 import random, string
-from PIL import Image
-from io import StringIO
 
 import os
 

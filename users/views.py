@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, render_to_response
+from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from django.views import View
 from django.urls import reverse
@@ -92,7 +92,7 @@ class ProfileView(View):
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
             if request.user.id == user_id \
                     or not profile_form.is_private \
-                    or profile_form in request.user.available_profiles.all():
+                    or (request.user.is_authenticated and profile_form in request.user.available_profiles.all()):
                 return render(request, 'users/profile.html', context={'profile_form': profile_form})
             else:
                 buttons = []
@@ -114,8 +114,9 @@ class EditProfileView(View):
             return redirect('home_app:home')
         else:
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
+            birth_date = str(profile_form.birth_date)[0:10]
             if profile_form:
-                return render(request, 'users/edit_profile.html', context={'profile_form': profile_form})
+                return render(request, 'users/edit_profile.html', context={'profile_form': profile_form, 'birth_date': birth_date})
             else:
                 return render(request, 'home_app/homepage.html')
 
@@ -126,7 +127,6 @@ class EditProfileView(View):
                                            str(UserProfile.objects.get(user=request.user).avatar.name))
 
             if 'avatar' in request.FILES:
-                print('t')
                 try:
                     os.remove(old_avatar_path)
                 except:
@@ -164,12 +164,15 @@ class PermissionRequest(View):
             return redirect('home_app:home')
         else:
             user = User.objects.get(id=user_id)
-            print(user.notifications)
             notification = Notification(sender=request.user,
                                         receiver=User.objects.get(id=user_id),
                                         text='please, give me an access to your profile')
-            notification.save()
-            user.notifications.add(notification)
+
+            if not Notification.objects.filter(receiving_time=notification.receiving_time,
+                                               sender=request.user).exists():
+
+                notification.save()
+                user.notifications.add(notification)
             return render(request, 'users/Message.html',
                           context={'message': 'Ваше сообщение с просьбой открытия профиля успешно отправлено'})
 

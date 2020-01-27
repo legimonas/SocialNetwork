@@ -29,6 +29,7 @@ SECRET_KEY = '=d$lghrtuz==xu=yr8qt%&b(qd^aynmplmlz2l3h8#nqm(-!fk'
 INSTALLED_APPS = [
     'users',
     'home',
+    'posts',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -1,5 +1,8 @@
+from PIL import Image
 from django import forms
 from django.contrib.auth.hashers import make_password, check_password
+
+from SocialNetwork import settings
 from users.models import *
 
 

@@ -7,7 +7,7 @@
 {% endblock %}
 {% block content %}
     <div class="container" style="border-color: #007bff; margin-top: 2%">
-        {% load staticfiles %}
+        {% load static %}
         <p><img src="/media/{{ profile_form.avatar }}" alt="image" style="border-radius: 10px"></p>
         <p>FirstName: {% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}</p>
         <p>LastName: {% if profile_form.last_name %}{{ profile_form.last_name }}{% endif %}</p>
