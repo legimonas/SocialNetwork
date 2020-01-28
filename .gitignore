@@ -5,4 +5,5 @@ __pycache__
 local_settings.py
 *.jpg
 *.png
+!/media/users_avatars/default.png
 *.jpeg
