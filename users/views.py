@@ -39,8 +39,6 @@ class SignUp(View):
 
             return render(request, 'users/signup.html', context={'errors': form.errors.as_data(), 'form': f})
 
-        # return render(request, 'users/edit_profile.html', context={'errors': errors, 'form': form})
-
 
 class Login(View):
     def get(self, request):
@@ -86,16 +84,30 @@ class Activate(View):
 
 class ProfileView(View):
     def get(self, request, user_id=None):
-        if not user_id:
+        if not user_id and not request.user.is_authenticated:
             return redirect('home_app:home')
+        elif not user_id and request.user.is_authenticated:
+            return redirect('users_app:profile', user_id=request.user.id)
         else:
-            profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
+            buttons = []
+            profile_form = None
+            if UserProfile.objects.filter(user=User.objects.get(id=user_id)):
+                profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
+            else:
+                buttons.append({
+                    'url': request.build_absolute_uri(reverse('users_app:profile_create')),
+                    'name': 'Создать'
+                })
+                return render(request, 'users/Message.html', context={
+                    'message': 'Данного профиля не существует',
+                    'buttons': buttons
+                })
             if request.user.id == user_id \
                     or not profile_form.is_private \
                     or (request.user.is_authenticated and profile_form in request.user.available_profiles.all()):
                 return render(request, 'users/profile.html', context={'profile_form': profile_form})
             else:
-                buttons = []
+
                 if request.user.is_authenticated:
                     buttons.append({
                         'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
@@ -107,11 +119,23 @@ class ProfileView(View):
                 })
 
 
+class ProfileCreate(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('users_app:login')
+        else:
+            profile = UserProfile(user=User.objects.get(id=request.user.id))
+            profile.save()
+            return redirect("users_app:edit_profile")
+
+
 class EditProfileView(View):
 
     def get(self, request, user_id=None):
-        if not user_id:
+        if not user_id and not request.user.is_authenticated:
             return redirect('home_app:home')
+        elif not user_id and request.user.is_authenticated:
+            return redirect('users_app:edit_profile', user_id=request.user.id)
         else:
             profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
             birth_date = str(profile_form.birth_date)[0:10]
@@ -127,10 +151,12 @@ class EditProfileView(View):
                                            str(UserProfile.objects.get(user=request.user).avatar.name))
 
             if 'avatar' in request.FILES:
-                try:
-                    os.remove(old_avatar_path)
-                except:
-                    print('can not delete old image')
+
+                if old_avatar_path != os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.png'):
+                    try:
+                        os.remove(old_avatar_path)
+                    except:
+                        print('can not delete old image')
                 form.save(filename=request.FILES['avatar'].name)
             else:
                 form.save()

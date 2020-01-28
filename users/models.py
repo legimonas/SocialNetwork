@@ -22,7 +22,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(models.Model):
-    avatar = models.ImageField(upload_to='users_avatars', default='default.jpg')
+    avatar = models.ImageField(upload_to='users_avatars', default=os.path.join('users_avatars','default.png'))
     first_name = models.CharField(max_length=50, null=True)
     last_name = models.CharField(max_length=50, null=True)
     birth_date = models.DateTimeField(default=timezone.datetime(year=2000, month=1, day=1))

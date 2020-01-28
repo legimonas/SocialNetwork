@@ -5,3 +5,4 @@ __pycache__
 local_settings.py
 *.jpg
 *.png
+*.jpeg

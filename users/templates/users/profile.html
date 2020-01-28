@@ -8,7 +8,7 @@
 {% block content %}
     <div class="container" style="border-color: #007bff; margin-top: 2%">
         {% load static %}
-        <p><img src="/media/{{ profile_form.avatar }}" alt="image" style="border-radius: 10px"></p>
+        <p><img src="{{ profile_form.avatar.url }}" alt="image" style="border-radius: 10px; width:10%"></p>
         <p>FirstName: {% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}</p>
         <p>LastName: {% if profile_form.last_name %}{{ profile_form.last_name }}{% endif %}</p>
         <p>BirthDate: {% if profile_form.birth_date %}{{ profile_form.birth_date }}{% endif %}</p>
