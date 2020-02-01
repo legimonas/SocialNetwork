@@ -52,7 +52,7 @@ def get_data_post(post_id, user):
 class PostsGet(View):
     def get(self, request, post_id=None):
         if post_id is None:
-            posts_list = Post.objects.all()
+            posts_list = reversed(Post.objects.order_by('publication_date').all())
             return render(
                 request,
                 'posts/posts_list.html',
