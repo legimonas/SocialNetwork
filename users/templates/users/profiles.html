@@ -1,0 +1,22 @@
+{% extends 'wrapper.html' %}
+{% block title %}
+    Записи
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="list-group">
+        <ol>
+            {% for profile in profiles %}
+                <div class="Posts">
+                <li class="list-group-item">
+                    <div style="margin:0; width: 60%">
+                        <img src="{{ profile.0.url }}" style="width: 10%; border-radius: 50%"><a href="{% url 'users_app:profile' profile.2 %}" class="btn-link">{{ profile.1 }}</a>
+
+                    </div>
+                </div>
+                </li>
+            {% endfor %}
+        </ol>
+        </div>
+    </div>
+{% endblock %}

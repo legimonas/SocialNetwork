@@ -3,7 +3,13 @@
 __pycache__
 *.рус
 local_settings.py
+
+!/media/users_avatars/default.png
+!/static/images/liked.png
+!/static/images/not_liked.png
+*.jpeg
 *.jpg
 *.png
-!/media/users_avatars/default.png
-*.jpeg
+*.mp4
+*.mp3
+*.avi

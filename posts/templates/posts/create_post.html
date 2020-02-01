@@ -1,6 +1,9 @@
 {% extends 'wrapper.html' %}
 {% block title %}
-    Профиль
+    Создать Запись
+{% endblock %}
+{% block articles_active %}
+    active
 {% endblock %}
 {% block includes %}
     <script>
@@ -11,17 +14,14 @@
             var el;
 
             reader.onloadend = function () {
-
-
-
                     el.setAttribute("src", reader.result);
 
                     imgList.appendChild(li);
                 };
             for(var i = 0; i < input.files.length; ++i){
                 var li = document.createElement("li");
-                li.setAttribute("style", "list-style-type: none")
-                a = input.files[i].name.split('.');
+                li.setAttribute("style", "list-style-type: none");
+                a = input.files.item(i).name.split('.');
                 var ext = a[a.length-1];
                 if(ext === "png" || ext === "jpeg" || ext === "gif" || ext === "jpg")
                     el = document.createElement("img");
@@ -30,7 +30,7 @@
                 else
                     el = document.createElement("audio");
                 el.setAttribute("style", "height: 100px");
-                reader.readAsDataURL(input.files[i]);
+                reader.readAsDataURL(input.files.item(i));
                 li.appendChild(el);
             }
 
@@ -43,7 +43,7 @@
                 {% csrf_token %}
                 <div class="form-group">
                 <label for="title">Title
-                    <input contenteditable="true" type="text" id="title" name="first_name" placeholder="Title" value="{% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}" class="form-control">
+                    <input type="text" id="title" name="title" placeholder="Title" value="{% if profile_form.first_name %}{{ profile_form.first_name }}{% endif %}" class="form-control">
                 </label>
                 </div>
                 <div class="form-group">
@@ -55,8 +55,8 @@
             <ul id="image_list">
 
             </ul>
-            <button id="files" onclick="document.getElementById('id_attachments').click(); return false;">Upload files</button>
-            <input type="file" onchange="readUrl(this); return false;" style="visibility: hidden" name="attachments" accept="image/*, video/*" id="id_attachments" multiple>
+            Attachments<br>
+            <input type="file" name="attachments" accept="image/*, video/*, audio/*" id="id_attachments" multiple>
         </div>
 
             <div id="message" style="font-size: 14px; color: red">{{ message }}</div>

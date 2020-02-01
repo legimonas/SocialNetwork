@@ -25,9 +25,11 @@
             <a class="nav-link" href="{% url 'home_app:home' %}">Home</a>
           </li>
           <li class="nav-item {% block articles_active %}{% endblock %}">
-            <a class="nav-link" href="#">Articles</a>
+            <a class="nav-link" href="{% url 'posts_app:get' %}">Articles</a>
           </li>
-
+        <li class="nav-item {% block recommendations_active %}{% endblock %}">
+            <a class="nav-link" href="{% url 'posts_app:recommendations' %}">Recommendations</a>
+          </li>
         </ul>
         {% if request.user.is_authenticated %}
         <ul class="navbar-nav ml-auto">
@@ -43,7 +45,11 @@
                       {{ request.user.username }}
                   </a>
                     <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="{% url 'users_app:notifications' request.user.id%}">Notifications</a>
+                    <a class="dropdown-item" href="{% url 'posts_app:create'%}">Add Article</a>
+                    <a class="dropdown-item" href="{% url 'users_app:followers'%}">Followers</a>
+                    <a class="dropdown-item" href="{% url 'users_app:subscriptions'%}">Subscriptions</a>
+                    <a class="dropdown-item" href="{% url 'posts_app:user_articles' request.user.id%}">My Articles</a>
+                    <a class="dropdown-item" href="{% url 'users_app:notifications' request.user.id%}">Notifications</a>
 
                 </div>
             </li>

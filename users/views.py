@@ -105,9 +105,8 @@ class ProfileView(View):
             if request.user.id == user_id \
                     or not profile_form.is_private \
                     or (request.user.is_authenticated and profile_form in request.user.available_profiles.all()):
-                return render(request, 'users/profile.html', context={'profile_form': profile_form})
+                return render(request, 'users/profile.html', context={'profile_form': profile_form, 'profile_followers': profile_form.followers.all()})
             else:
-
                 if request.user.is_authenticated:
                     buttons.append({
                         'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
@@ -127,6 +126,59 @@ class ProfileCreate(View):
             profile = UserProfile(user=User.objects.get(id=request.user.id))
             profile.save()
             return redirect("users_app:edit_profile")
+
+
+class Subscribe(View):
+    def get(self, request, user_id):
+        if not request.user.is_authenticated:
+            return redirect('users_app:profile', user_id)
+        else:
+            profile = UserProfile.objects.get(user_id=user_id)
+            if (not profile.is_private) or request.user in profile.available_to.all():
+                User.objects.get(id=request.user.id).subscriptions.add(profile)
+                return redirect('users_app:profile', user_id)
+            else:
+                return render(request,
+                              'users/Message.html',
+                              context={
+                                  'message': 'невозможно оформить подписку, так как это закрытый',
+                                  'buttons': [{
+                                      'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
+                                      'name': 'Попросить разрешения'
+                                  }]
+                              })
+
+
+class Subscriptions(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('home_app:home')
+        else:
+            subs = []
+            for profile in request.user.subscriptions.all():
+                user = User.objects.get(id=profile.user_id)
+                subs.append([profile.avatar, user.email, user.id])
+            return render(request, 'users/profiles.html', context={'profiles': subs})
+
+
+class Followers(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('home_app:home')
+        else:
+            followers = [[UserProfile.objects.get(user=user).avatar, user.email, user.id] for user in
+                         UserProfile.objects.get(user=request.user).followers.all()]
+            return render(request, 'users/profiles.html', context={'profiles': followers})
+
+
+class Unsubscribe(View):
+    def get(self, request, user_id):
+        profile = UserProfile.objects.get(user_id=user_id)
+        if not request.user.is_authenticated or not request.user in profile.followers.all():
+            return redirect('users_app:profile', user_id)
+        else:
+            User.objects.get(id=request.user.id).subscriptions.remove(profile)
+            return redirect('users_app:profile', user_id)
 
 
 class EditProfileView(View):
@@ -180,7 +232,6 @@ class DeleteNotification(View):
     def get(self, request, notification_id=None):
         if notification_id:
             Notification.objects.filter(id=notification_id).delete()
-
         return redirect('users_app:notifications', request.user.id)
 
 

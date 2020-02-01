@@ -30,6 +30,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     is_private = models.BooleanField(default=False)
     available_to = models.ManyToManyField(User, related_name='available_profiles')
+    followers = models.ManyToManyField(User, related_name='subscriptions')
 
 
 class AuthKey(models.Model):

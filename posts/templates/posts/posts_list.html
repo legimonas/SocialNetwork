@@ -1,0 +1,31 @@
+{% extends 'wrapper.html' %}
+{% block title %}
+    Записи
+{% endblock %}
+{% block articles_active %}
+    {{ articles_active }}
+{% endblock %}
+{% block recommendations_active %}
+    {{ recommendations_active }}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="list-group">
+        <ol>
+            {% for post in posts %}
+                <div class="Posts">
+                <li class="list-group-item">
+                    <div style="margin:0; width: 60%">
+                        <a href="{% url 'posts_app:get' post.id %}" class="btn-link">{{ post.title }}</a>
+                        <p class="list-group-item-text">{{ post.text|slice:":60" }}...</p>
+                        <h6>{{ post.publication_date }}</h6>
+                    </div>
+                </div>
+                </li>
+            {% empty %}
+                <p>Здесь пока еще нет записей</p>
+            {% endfor %}
+        </ol>
+        </div>
+    </div>
+{% endblock %}
