@@ -58,6 +58,16 @@ class LoginView(ObtainAuthToken):
         return Response({'token': token.key}, status=status.HTTP_200_OK)
 
 
+class LogoutView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        auth = get_authorization_header(request).split()
+        token = Token.objects.get(key=auth[1].decode())
+        token.delete()
+        return Response(status=status.HTTP_200_OK)
+
 class ProfileView(APIView):
     authentication_classes = [TokenAuthentication]
 
