@@ -24,19 +24,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-    @property
-    def token(self):
-        return self._generate_jwt_token()
-
-    def _generate_jwt_token(self):
-        dt = datetime.now() + timedelta(days=60)
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': calendar.timegm(dt.timetuple()),
-            'email': self.email
-        }, settings.SECRET_KEY, algorithm='HS256')
-        return token.decode('utf-8')
-
     def safe_get(id=None):
         try:
             a_key = User.objects.get(id=id)
