@@ -1,12 +1,14 @@
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import MyUserManager
 from django.utils import timezone
 import random, string, calendar
+from django.core.files.storage import FileSystemStorage
 
 import os
 

@@ -1,15 +1,21 @@
 from abc import ABC
 
+import os
+
+from PIL import Image
+from django.core.validators import FileExtensionValidator
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth import authenticate, login, logout
+from django.conf import settings
 
 from .models import User, UserProfile
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     followers = serializers.SerializerMethodField()
+    avatar = serializers.FileField(write_only=True)
 
     class Meta:
         model = UserProfile
@@ -23,6 +29,40 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 'id': follower.pk
             })
         return followers
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        default = False
+
+        if not 'avatar' in validated_data:
+            default = True
+
+        name, extension = os.path.splitext(validated_data['avatar'].name)
+
+        if default:
+            instance.avatar.name = os.path.join('users_avatars', 'default.jpg')
+            instance.save()
+            return instance
+
+        instance.avatar.name = name + '__' + str(instance.id) + extension
+        validated_data['avatar'].name = instance.avatar.name
+        instance.save()
+        image = None
+        if os.path.basename(instance.avatar.name) == 'default.jpg':
+            image = Image.open(os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.jpg'))
+        else:
+            image = Image.open(os.path.join(settings.MEDIA_ROOT, 'users_avatars', instance.avatar.name))
+            # image = Image.open(validated_data['avatar'])
+
+        image.thumbnail((200, 200))
+        # image.save(os.path.join(settings.MEDIA_ROOT, 'users_avatars', instance.avatar.name))
+
+        return instance
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+
+        return instance
 
 
 class SignUpSerializer(serializers.ModelSerializer):

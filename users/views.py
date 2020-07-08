@@ -7,7 +7,7 @@ from rest_framework.authentication import TokenAuthentication, get_authorization
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework.parsers import FileUploadParser, MultiPartParser
+from rest_framework.parsers import MultiPartParser
 from .serializers import *
 from .models import *
 
@@ -17,7 +17,7 @@ from .models import *
 class SignUpView(APIView):
     def post(self, request):
         sign_up = SignUpSerializer(data=request.data)
-        sign_up.is_valid(False)
+        sign_up.is_valid(True)
         user = sign_up.save()
         auth_key = AuthKey(key=AuthKey.gen_key(10), user=user)
         auth_key.save()
@@ -131,18 +131,16 @@ class EditProfileView(APIView):
         return Response(profile.data)
 
     def post(self, request):
-        serializer = UserProfileSerializer(data=request.data, instance=UserProfile.objects.get(user=request.user))
-        serializer.is_valid(True)
         old_avatar_path = os.path.join(settings.MEDIA_ROOT,
                                        str(UserProfile.objects.get(user=request.user).avatar.name))
+        serializer = UserProfileSerializer(data=request.data, instance=UserProfile.objects.get(user=request.user))
+        serializer.is_valid(True)
+        serializer.save()
 
-        if 'avatar' in request.FILES:
-            if old_avatar_path != os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.png'):
-                try:
-                    os.remove(old_avatar_path)
-                except:
-                    print('can not delete old image')
-            serializer.save(filename=request.FILES['avatar'].name)
-        else:
-            serializer.save()
+        # if 'avatar' in request.FILES:
+        #     if old_avatar_path != os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.png'):
+        #         try:
+        #             os.remove(old_avatar_path)
+        #         except:
+        #             print('can not delete old image')
         return Response(status=status.HTTP_200_OK)
