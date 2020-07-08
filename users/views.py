@@ -7,6 +7,7 @@ from rest_framework.authentication import TokenAuthentication, get_authorization
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from rest_framework.parsers import FileUploadParser, MultiPartParser
 from .serializers import *
 from .models import *
 
@@ -48,6 +49,7 @@ class ActivateView(APIView):
         else:
             return Response({'Activation error': 'no such registered authentication key'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
@@ -64,15 +66,15 @@ class LogoutView(APIView):
 
     def get(self, request):
         auth = get_authorization_header(request).split()
-        token = Token.objects.get(key=auth[1].decode())
+        token = Token.objects.get(user=request.user)
         token.delete()
         return Response(status=status.HTTP_200_OK)
+
 
 class ProfileView(APIView):
     authentication_classes = [TokenAuthentication]
 
     def get(self, request, user_id=None):
-        user_profile = UserProfile()
         if not user_id and not request.user.is_authenticated:
             return Response({'errors': ['user profile is not existing']}, status=status.HTTP_404_NOT_FOUND)
         elif not user_id and request.user.is_authenticated:
@@ -110,3 +112,37 @@ class ProfileView(APIView):
                 }, status=status.HTTP_403_FORBIDDEN)
 
 
+class ProfileCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    def get(self, request):
+        profile = UserProfile(user=User.objects.get(id=request.user.id))
+        profile.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class EditProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    parser_classes = [MultiPartParser]
+
+    def get(self, request):
+        profile = UserProfileSerializer(UserProfile.objects.get(user=request.user))
+        return Response(profile.data)
+
+    def post(self, request):
+        serializer = UserProfileSerializer(data=request.data, instance=UserProfile.objects.get(user=request.user))
+        serializer.is_valid(True)
+        old_avatar_path = os.path.join(settings.MEDIA_ROOT,
+                                       str(UserProfile.objects.get(user=request.user).avatar.name))
+
+        if 'avatar' in request.FILES:
+            if old_avatar_path != os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.png'):
+                try:
+                    os.remove(old_avatar_path)
+                except:
+                    print('can not delete old image')
+            serializer.save(filename=request.FILES['avatar'].name)
+        else:
+            serializer.save()
+        return Response(status=status.HTTP_200_OK)

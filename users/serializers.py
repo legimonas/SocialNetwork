@@ -13,7 +13,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ['available_to', 'is_private']
+        exclude = ['available_to']
 
     def get_followers(self, instance):
         followers = []
@@ -23,6 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 'id': follower.pk
             })
         return followers
+
 
 class SignUpSerializer(serializers.ModelSerializer):
     pass2 = serializers.CharField(max_length=50, required=True, write_only=True)
