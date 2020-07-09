@@ -8,8 +8,8 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser
-from .serializers import *
-from .models import *
+from users.serializers import *
+from users.models import *
 
 
 # Create your views here.
@@ -40,7 +40,6 @@ class ActivateView(APIView):
         auth_key = AuthKey.safe_get(key=key)
         if auth_key is not None:
             user = auth_key.user
-            print(user)
             user.is_active = True
             user.save()
             auth_key.delete()
@@ -76,7 +75,7 @@ class ProfileView(APIView):
 
     def get(self, request, user_id=None):
         if not user_id and not request.user.is_authenticated:
-            return Response({'errors': ['user profile is not existing']}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'errors': ['user profile does not exist']}, status=status.HTTP_404_NOT_FOUND)
         elif not user_id and request.user.is_authenticated:
             serializer = UserProfileSerializer(UserProfile.objects.get(user=request.user))
             return Response(serializer.data)
@@ -115,6 +114,7 @@ class ProfileView(APIView):
 class ProfileCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+
     def get(self, request):
         profile = UserProfile(user=User.objects.get(id=request.user.id))
         profile.save()
@@ -135,12 +135,12 @@ class EditProfileView(APIView):
                                        str(UserProfile.objects.get(user=request.user).avatar.name))
         serializer = UserProfileSerializer(data=request.data, instance=UserProfile.objects.get(user=request.user))
         serializer.is_valid(True)
-        serializer.save()
+        if 'avatar' in request.FILES:
+            if os.path.basename(old_avatar_path) != 'default.png':
+                try:
+                    os.remove(old_avatar_path)
+                except:
+                    return Response({'error': 'can\'t delete old avatar'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # if 'avatar' in request.FILES:
-        #     if old_avatar_path != os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.png'):
-        #         try:
-        #             os.remove(old_avatar_path)
-        #         except:
-        #             print('can not delete old image')
+        serializer.save()
         return Response(status=status.HTTP_200_OK)

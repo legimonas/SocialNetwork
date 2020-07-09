@@ -1,6 +1,5 @@
-from abc import ABC
-
 import os
+from io import BytesIO
 
 from PIL import Image
 from django.core.validators import FileExtensionValidator
@@ -9,13 +8,13 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from .models import User, UserProfile
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     followers = serializers.SerializerMethodField()
-    avatar = serializers.FileField(write_only=True)
 
     class Meta:
         model = UserProfile
@@ -31,37 +30,29 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return followers
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
-        default = False
-
-        if not 'avatar' in validated_data:
-            default = True
-
-        name, extension = os.path.splitext(validated_data['avatar'].name)
+        default = not 'avatar' in validated_data
 
         if default:
             instance.avatar.name = os.path.join('users_avatars', 'default.jpg')
-            instance.save()
+            super().update(instance, validated_data)
             return instance
+
+        name, extension = os.path.splitext(validated_data['avatar'].name)
 
         instance.avatar.name = name + '__' + str(instance.id) + extension
         validated_data['avatar'].name = instance.avatar.name
-        instance.save()
-        image = None
         if os.path.basename(instance.avatar.name) == 'default.jpg':
             image = Image.open(os.path.join(settings.MEDIA_ROOT, 'users_avatars', 'default.jpg'))
         else:
-            image = Image.open(os.path.join(settings.MEDIA_ROOT, 'users_avatars', instance.avatar.name))
-            # image = Image.open(validated_data['avatar'])
+            image = Image.open(validated_data['avatar'])
 
         image.thumbnail((200, 200))
-        # image.save(os.path.join(settings.MEDIA_ROOT, 'users_avatars', instance.avatar.name))
+        buffer = BytesIO()
+        image.save(buffer, extension.upper()[1:])
+        buffer.seek(0, os.SEEK_END)
+        validated_data['avatar'] = InMemoryUploadedFile(buffer, None, instance.avatar.name, 'image/png', buffer.tell(), None)
 
-        return instance
-
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-
+        super().update(instance, validated_data)
         return instance
 
 
