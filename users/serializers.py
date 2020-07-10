@@ -2,15 +2,13 @@ import os
 from io import BytesIO
 
 from PIL import Image
-from django.core.validators import FileExtensionValidator
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from .models import User, UserProfile
+from .models import User, UserProfile, Notification
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -108,3 +106,9 @@ class LoginSerializer(serializers.ModelSerializer):
                 'validators': [UnicodeUsernameValidator()],
             }
         }
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'

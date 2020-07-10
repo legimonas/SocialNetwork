@@ -1,5 +1,5 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.reverse import reverse
 from django.core.mail import send_mail
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -46,13 +46,13 @@ class ActivateView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key}, status=status.HTTP_200_OK)
         else:
-            return Response({'Activation error': 'no such registered authentication key'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Activation error': 'no such registered authentication key'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(ObtainAuthToken):
-
-    def post(self, request, *args, **kwargs):
-
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token, created = Token.objects.get_or_create(user_id=serializer.user_id)
@@ -64,10 +64,10 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        auth = get_authorization_header(request).split()
         token = Token.objects.get(user=request.user)
         token.delete()
         return Response(status=status.HTTP_200_OK)
+
 
 
 class ProfileView(APIView):
@@ -82,28 +82,26 @@ class ProfileView(APIView):
         else:
             buttons = []
             profile_form = None
-            if UserProfile.safe_filter(user=User.safe_get(id=user_id)):
+            if UserProfile.objects.filter(user=User.safe_get(id=user_id)):
                 profile_form = UserProfile.objects.get(user=User.objects.get(id=user_id))
             else:
-                # доделать!!!!
                 buttons.append({
-                    #     'url': request.build_absolute_uri(reverse('users_app:profile_create')),
-                    'name': 'Создать'
+                    'url': request.build_absolute_uri(reverse('users_app:profile_create')),
+                    'name': 'Create'
                 })
                 return Response({
-                    'message': 'user profile is not existing',
+                    'message': 'user profile does not exist',
                     'buttons': 'Create'
                 }, status=status.HTTP_404_NOT_FOUND)
             if request.user.id == user_id \
                     or not profile_form.is_private \
                     or (request.user.is_authenticated and profile_form in request.user.available_profiles.all()):
                 serializer = UserProfileSerializer(profile_form)
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 if request.user.is_authenticated:
-                    # доделать!!!!
                     buttons.append({
-                        # 'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
+                        'url': request.build_absolute_uri(reverse('users_app:perm_req', args=[user_id])),
                         'name': 'Попросить разрешения'
                     })
                 return Response({
@@ -144,3 +142,63 @@ class EditProfileView(APIView):
 
         serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class PermissionRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request, user_id: int):
+        user = User.objects.get(id=user_id)
+        notification = Notification(
+            sender=request.user,
+            receiver=user,
+            text='user ' + request.user.username + ' requests permission to access your profile'
+        )
+        if not Notification.objects.filter(receiving_time=notification.receiving_time,
+                                           sender=request.user).exists():
+            notification.save()
+            user.notifications.add(notification)
+            return Response({'message': 'your message sent successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class PermissionAcceptView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request, user_id=None):
+        user = User.objects.get(id=request.user.id)
+        sender = User.objects.get(id=user_id)
+
+        sender.available_profiles.add(UserProfile.objects.get(user=user))
+        user.save()
+        Notification.objects.filter(sender=sender, is_request=True).delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class NotificationsListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        return Notification.objects.filter(receiver=self.request.user)
+
+
+class NotificationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def delete(self, request, notification_id: int):
+        notification = None
+        try:
+            notification = Notification.objects.get(id=notification_id)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if notification.receiver.id == request.user.id:
+            notification.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
