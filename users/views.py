@@ -1,9 +1,10 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.reverse import reverse
 from django.core.mail import send_mail
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authentication import TokenAuthentication, get_authorization_header
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -52,6 +53,7 @@ class ActivateView(APIView):
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -69,7 +71,6 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-
 class ProfileView(APIView):
     authentication_classes = [TokenAuthentication]
 
@@ -78,7 +79,7 @@ class ProfileView(APIView):
             return Response({'errors': ['user profile does not exist']}, status=status.HTTP_404_NOT_FOUND)
         elif not user_id and request.user.is_authenticated:
             serializer = UserProfileSerializer(UserProfile.objects.get(user=request.user))
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             buttons = []
             profile_form = None
@@ -142,6 +143,54 @@ class EditProfileView(APIView):
 
         serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class SubscribeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    # subscribe
+    def get(self, request, user_id):
+        profile = UserProfile.objects.get(user_id=user_id)
+        if (not profile.is_private) or request.user in profile.available_to.all():
+            subs = User.objects.get(id=request.user.id).subscriptions
+            if not profile in subs.all() and user_id != request.user.id:
+                subs.add(profile)
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'impossible to subscribe private profile'}, status=status.HTTP_403_FORBIDDEN)
+
+    # unsubscribe
+    def delete(self, request, user_id):
+        profile = UserProfile.objects.get(user_id=user_id)
+        if request.user in profile.followers.all():
+            User.objects.get(id=request.user.id).subscriptions.remove(profile)
+        return Response(status=status.HTTP_200_OK)
+
+
+class SubscriptionsListView(generics.ListAPIView):
+    serializer_class = UserInfoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        return [User.objects.get(userprofile=profile) for profile in self.request.user.subscriptions.all()]
+
+
+class FollowersListView(generics.ListAPIView):
+    serializer_class = UserInfoSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    authentication_classes = [TokenAuthentication]
+
+    def get_queryset(self):
+        user = None
+        if 'user_id' in self.kwargs:
+            user = User.objects.get(id=self.kwargs['user_id'])
+        if not user:
+            user = self.request.user
+        if not user:
+            raise ValidationError('user not specified')
+        return UserProfile.objects.get(user=user).followers.all()
 
 
 class PermissionRequestView(APIView):

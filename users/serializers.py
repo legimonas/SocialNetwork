@@ -112,3 +112,18 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
+    def get_avatar(self, instance):
+        return UserProfile.objects.get(user_id=instance.id).avatar.url
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'avatar',
+        ]

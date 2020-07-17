@@ -12,8 +12,12 @@ urlpatterns = [
     path('signup/activate/<str:key>/', ActivateView.as_view(), name='activate'),
     path('profile/edit/', EditProfileView.as_view(), name='edit_profile'),
     path('profile/create/', ProfileCreateView.as_view(), name='profile_create'),
+    path('profile/subscribe/<int:user_id>', SubscribeView.as_view(), name='subscribe'),
+    path('subscriptions/', SubscriptionsListView.as_view(), name='subscriptions'),
+    path('followers/<int:user_id>', FollowersListView.as_view(), name='followers'),
+    path('followers/', FollowersListView.as_view(), name='followers'),
     path('permission_request/<int:user_id>', PermissionRequestView.as_view(), name='perm_req'),
     path('permission_accept/<int:user_id>', PermissionAcceptView.as_view(), name='perm_acc'),
     path('notifications/', NotificationsListView.as_view(), name='notifications'),
-    path('notification/<int:notification_id>', NotificationView.as_view(), name='notification')
+    path('notification/<int:notification_id>', NotificationView.as_view(), name='notification'),
 ]

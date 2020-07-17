@@ -41,19 +41,19 @@ class UserAuthClass(APITestCase):
         return response.data['token']
 
     def logout(self, token: str):
-        authtokens_count = Token.objects.count()
+        auth_tokens_count = Token.objects.count()
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
         url = reverse('users_app:logout')
         response = self.client.get(url)
         self.client.credentials()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Token.objects.count(), authtokens_count-1)
+        self.assertEqual(Token.objects.count(), auth_tokens_count-1)
         with self.assertRaises(ObjectDoesNotExist) as context:
             Token.objects.get(key=token)
 
     def login(self, email: str, password: str):
-        authtokens_count = Token.objects.count()
+        auth_tokens_count = Token.objects.count()
 
         data = {
             'email': email,
@@ -62,7 +62,7 @@ class UserAuthClass(APITestCase):
         url = reverse('users_app:login')
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Token.objects.count(), authtokens_count+1)
+        self.assertEqual(Token.objects.count(), auth_tokens_count+1)
         self.assertTrue('token' in response.data)
         return response.data['token']
 
@@ -80,8 +80,8 @@ class UsersTests(UserAuthClass):
         return file
 
     def setUp(self):
-        self.token1 = self.create_and_activate_account('example1@gmail.com', '12345', '12345', 'NoName')
-        self.token2 = self.create_and_activate_account('example2@gmail.com', '11111', '11111', 'NoName')
+        self.token1 = self.create_and_activate_account('example1@gmail.com', '12345', '12345', 'NoName1')
+        self.token2 = self.create_and_activate_account('example2@gmail.com', '11111', '11111', 'NoName2')
 
     def test_login_and_logout(self):
         self.logout(self.token1)
@@ -156,3 +156,65 @@ class UsersTests(UserAuthClass):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('first_name' in response.data)
+
+    def test_subscriptions(self):
+        id2 = User.objects.get(id=Token.objects.get(key=self.token2).user_id).id
+
+        # проверяем возможность подписки
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token1)
+        url = reverse('users_app:subscribe', args=[id2])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserProfile.objects.get(user_id=id2).followers.count(), 1)
+
+        # проверяем "списочные" контроллеры
+        # 1) Список подписок
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token1)
+        url = reverse('users_app:subscriptions')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'NoName2')
+
+        # 2) список подписчиков с указанием id пользователя
+        url = reverse('users_app:followers', args=[id2])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'NoName1')
+        data1 = response.data
+
+        # 3) список подписчиков с указание токена авторизации
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token2)
+        url = reverse('users_app:followers')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, data1)
+
+        # проверка возможности отписки
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token1)
+        url = reverse('users_app:subscribe', args=[id2])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserProfile.objects.get(user_id=id2).followers.count(), 0)
+
+        # проверка запрета подписки на приватный профиль
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token2)
+        url = reverse('users_app:edit_profile')
+        data = {
+            'is_private': True,
+        }
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token1)
+        url = reverse('users_app:subscribe', args=[id2])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(UserProfile.objects.get(user_id=id2).followers.count(), 0)

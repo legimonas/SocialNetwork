@@ -4,12 +4,16 @@ __pycache__
 *.рус
 local_settings.py
 *.png
-!/media/users_avatars/default.png
-!/static/images/liked.png
-!/static/images/not_liked.png
+
 *.jpeg
 *.jpg
 
 *.mp4
 *.mp3
 *.avi
+!/media/users_avatars/default.png
+!/media/tests/test.jpg
+!/media/tests/test.mp3
+!/media/tests/test.mp4
+!/static/images/liked.png
+!/static/images/not_liked.png
